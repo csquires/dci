@@ -11,4 +11,4 @@ To get started, download, unzip, and run:
 
 * `pip install  requirements.txt`
 * `R -f install_packages.R`
-* `jupyter-notebook main.ipynb`
+* `jupyter-notebook run_algs.ipynb`
