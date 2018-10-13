@@ -2,6 +2,7 @@ import itertools as itr
 from scipy import stats
 import numpy as np
 import math
+import random
 
 
 # === RANDOM NUMBERS
@@ -110,16 +111,30 @@ def random_dag(p, sparsity, lower_bound=.25, upper_bound=1.):
     return B
 
 
-def random_dag_changes(mat, r=0, a=0, c=0):
-    nonzero_ixs = set(zip(*np.where(mat != 0)))
-    zero_ixs = upper_tri_ixs_zero(mat)
-    new_mat, removed_ixs = random_removal(mat, r, indices=nonzero_ixs)
-    remaining_nonzero_ixs = nonzero_ixs - removed_ixs
-    new_mat, added_ixs = random_addition(new_mat, a, indices=zero_ixs)
-    new_mat, changed_ixs = random_change(new_mat, c, indices=remaining_nonzero_ixs)
+def random_dag_changes(mat, r=0, a=0, c=0, type_='independent'):
+    if type_ == 'independent':
+        nonzero_ixs = set(zip(*np.where(mat != 0)))
+        zero_ixs = upper_tri_ixs_zero(mat)
+        new_mat, removed_ixs = random_removal(mat, r, indices=nonzero_ixs)
+        remaining_nonzero_ixs = nonzero_ixs - removed_ixs
+        new_mat, added_ixs = random_addition(new_mat, a, indices=zero_ixs)
+        new_mat, changed_ixs = random_change(new_mat, c, indices=remaining_nonzero_ixs)
 
-    changed_edges = removed_ixs | added_ixs | changed_ixs
-    return new_mat, changed_edges
+        changed_edges = removed_ixs | added_ixs | changed_ixs
+        return new_mat, changed_edges
+    else:
+        nonzero_ixs = set(zip(*np.where(mat != 0)))
+        zero_ixs = set(upper_tri_ixs_zero(mat))
+
+        n_removals = int(r*len(nonzero_ixs))
+        n_additions = int(r*len(zero_ixs))
+        removal_ixs = random.sample(nonzero_ixs, min(n_removals, len(nonzero_ixs)))
+        addition_ixs = random.sample(zero_ixs, min(n_additions, len(zero_ixs)))
+
+        new_mat, added_ixs = random_addition(mat, 1., indices=addition_ixs)
+        new_mat, removed_ixs = random_removal(new_mat, 1., indices=removal_ixs)
+
+        return new_mat, (added_ixs | removed_ixs)
 
 
 def random_removal(B, removal_prob, indices=None):
@@ -181,6 +196,14 @@ def sample_dag(B, n, sigmas=None):
     noise = np.random.normal(scale=sigmas, size=(n, p))
     A = np.linalg.inv(np.eye(p) - B.T)
     return noise @ A.T
+
+
+def random_variances(p, num_changes):
+    sigmas = np.ones(p)
+    ixs = random.sample(range(p), num_changes)
+    for ix in ixs:
+        sigmas[ix] = np.random.uniform(1.25, 2)
+    return sigmas
 
 
 def adj2prec(B, sigmas=None):

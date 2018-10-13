@@ -3,6 +3,7 @@ from utils import math_utils
 from collections import Iterable
 from scipy import stats
 from sklearn import linear_model
+import networkx as nx
 
 
 def estimate_ddag(X1, X2, skeleton, changed_nodes, alpha=.05, max_set_size=None, verbose=False):
@@ -85,6 +86,19 @@ def estimate_ddag(X1, X2, skeleton, changed_nodes, alpha=.05, max_set_size=None,
                 oriented_edges.add(edge)
                 printv("Oriented (%d, %d) as %s" % (i, j, edge))
                 break
+
+    unoriented_edges = skeleton - oriented_edges - {(j, i) for i, j in oriented_edges}
+    g = nx.DiGraph()
+    for i, j in oriented_edges:
+        g.add_edge(i, j)
+    for i in g.nodes:
+        for j in g.successors(i):
+            if (i, j) in unoriented_edges:
+                oriented_edges.add((i, j))
+                unoriented_edges.remove((i, j))
+            if (j, i) in unoriented_edges:
+                oriented_edges.add((i, j))
+                unoriented_edges.remove((j, i))
 
     return oriented_edges
 

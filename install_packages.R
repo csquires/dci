@@ -4,4 +4,7 @@ biocLite("RBGL")
 
 install.packages('pcalg')
 install.packages('GetoptLong')
+install.packages('argparse')
+install.packages('doParallel')
+install.packages('foreach')
 
