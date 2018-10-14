@@ -63,9 +63,9 @@ def get_edges_da(folder, algs, nsamples_list, alphas):
 
 
 def edges_da2_exact_recovery(edges_da):
-    algs = set(edges_da.coords['algs']) - {'true'}
-    nsamples_list = edges_da.coords['nsamples']
-    alphas = edges_da.coords['alpha']
+    algs = list(set(edges_da.coords['alg'].values) - {'true'})
+    nsamples_list = list(edges_da.coords['nsamples'].values)
+    alphas = list(edges_da.coords['alpha'].values)
     exact_recovery_da = xr.DataArray(
         np.zeros([len(algs), len(nsamples_list), len(alphas)]),
         dims=['alg', 'nsamples', 'alpha'],
@@ -75,12 +75,63 @@ def edges_da2_exact_recovery(edges_da):
             'alpha': alphas
         }
     )
+    for alg, nsamples, alpha in itr.product(algs, nsamples_list, alphas):
+        true_edges_by_dag = edges_da.sel(alg='true', nsamples=nsamples, alpha=alpha)
+        est_edges_by_dag = edges_da.sel(alg=alg, nsamples=nsamples, alpha=alpha)
+        matching_dags = (true_edges_by_dag == est_edges_by_dag).all(dim='edge')
+        exact_recovery_da.loc[dict(alg=alg, nsamples=nsamples, alpha=alpha)] = matching_dags.sum() / len(matching_dags)
 
     return exact_recovery_da
 
 
+def edge_da2tpr_fpr(edges_da):
+    algs = list(set(edges_da.coords['alg'].values) - {'true'})
+    nsamples_list = list(edges_da.coords['nsamples'].values)
+    alphas = list(edges_da.coords['alpha'].values)
+    pair_ixs = edges_da.coords['pair'].values
+
+    rates_da = xr.DataArray(
+        np.zeros([len(pair_ixs), len(algs), len(nsamples_list), len(alphas), 2]),
+        dims=['pair', 'alg', 'nsamples', 'alpha', 'rate'],
+        coords={
+            'pair': pair_ixs,
+            'alg': algs,
+            'nsamples': nsamples_list,
+            'alpha': alphas,
+            'rate': ['tpr', 'fpr']
+        }
+    )
+    for alg, nsamples, alpha in itr.product(algs, nsamples_list, alphas):
+        # get set of true edges and true non-edges for each pair
+        true_edges_by_pair = edges_da.sel(alg='true', nsamples=nsamples, alpha=alpha)
+        true_edges_by_pair = [set(np.where(true_edges_by_pair.sel(pair=pair_ix))[0]) for pair_ix in pair_ixs]
+        true_nonedges_by_pair = [set(edges_da.coords['pair'].values) - true_edges for true_edges in true_edges_by_pair]
+
+        # get set of estimated edges and estimated non-edges for each pair
+        est_edges_by_pair = edges_da.sel(alg=alg, nsamples=nsamples, alpha=alpha)
+        est_edges_by_pair = [set(np.where(est_edges_by_pair.sel(pair=pair_ix))[0]) for pair_ix in pair_ixs]
+        est_nonedges_by_pair = [set(edges_da.coords['pair'].values) - est_edges for est_edges in est_edges_by_pair]
+
+        # get false positives and true positives for each pair
+        false_positives_by_pair = [est_edges_by_pair[pair_ix] - true_edges_by_pair[pair_ix] for pair_ix in pair_ixs]
+        true_positives_by_pair = [est_edges_by_pair[pair_ix] & true_edges_by_pair[pair_ix] for pair_ix in pair_ixs]
+
+        num_fp_by_pair = np.array([len(fps) for fps in false_positives_by_pair])
+        num_tp_by_pair = np.array([len(tps) for tps in true_positives_by_pair])
+        num_negatives_by_pair = np.array([len(negatives) for negatives in true_nonedges_by_pair])
+        num_positives_by_pair = np.array([len(positives) for positives in true_edges_by_pair])
+        rates_da.loc[dict(alg=alg, nsamples=nsamples, alpha=alpha, rate='fpr')] = num_fp_by_pair / num_negatives_by_pair
+        rates_da.loc[dict(alg=alg, nsamples=nsamples, alpha=alpha, rate='tpr')] = num_tp_by_pair / num_positives_by_pair
+
+    return rates_da
+
+
 if __name__ == '__main__':
+    import pdb
     e = get_edges_da('fig1_data', ['pcalg', 'ges', 'dci'], [1000], [1e-5, 1e-4, 1e-3, 1e-2, 1e-1])
+    exact_recovery = edges_da2_exact_recovery(e)
+    rates_da = edge_da2tpr_fpr(e)
+
 
 
 

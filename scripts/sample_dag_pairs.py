@@ -7,8 +7,8 @@ import yaml
 import causaldag as cd
 from tqdm import trange
 
-random.seed(1729)
-np.random.seed(1729)
+random.seed(1738)
+np.random.seed(1738)
 
 parser = argparse.ArgumentParser(description='Sample from pairs of DAGs')
 parser.add_argument('--folder', type=str, help='Folder to read DAGs from')
@@ -19,6 +19,7 @@ args = parser.parse_args()
 dataset_folder = os.path.join(DATA_FOLDER, args.folder)
 dataset_config = yaml.load(open(os.path.join(dataset_folder, 'config.yaml')))
 
+print('SAMPLING from DAGs')
 for d in trange(dataset_config['npairs']):
     pair_folder = os.path.join(dataset_folder, 'pair%d' % d)
     parameters_folder = os.path.join(pair_folder, 'parameters')

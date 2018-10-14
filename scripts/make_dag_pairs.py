@@ -7,8 +7,8 @@ from tqdm import trange
 
 import random
 import numpy as np
-random.seed(1729)
-np.random.seed(1729)
+random.seed(1738)
+np.random.seed(1738)
 
 parser = argparse.ArgumentParser(description='Create pairs of DAGs')
 parser.add_argument('--npairs', '-d', type=int, help='Number of DAG pairs to create')
@@ -63,6 +63,7 @@ if args.changes not in ['fixed', 'independent']:
 dataset_folder = os.path.join(DATA_FOLDER, args.folder)
 os.makedirs(dataset_folder, exist_ok=True)
 yaml.dump(vars(args), open(os.path.join(dataset_folder, 'config.yaml'), 'w'))
+print('CREATING DAGs')
 for d in trange(args.npairs):
     B1 = math_utils.random_dag(args.nnodes, args.nneighbors/(args.nnodes-1))
     B2, _ = math_utils.random_dag_changes(

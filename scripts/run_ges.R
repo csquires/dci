@@ -1,3 +1,5 @@
+library('parallel')
+library('iterators')
 library('argparse')
 library('yaml')
 library('foreach')
@@ -36,3 +38,4 @@ nothing<-foreach(i=0:(dataset_config$npairs-1)) %dopar% {
     write(as(as(as(cpdag1$essgraph, "graphNEL"), "graphAM"), "matrix"), file=file.path(RES_FOLDER, 'A1.txt'), ncolumns=ncol(X1))
     write(as(as(as(cpdag2$essgraph, "graphNEL"), "graphAM"), "matrix"), file=file.path(RES_FOLDER, 'A2.txt'), ncolumns=ncol(X2))
 }
+print('RAN GES')
