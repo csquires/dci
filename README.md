@@ -9,7 +9,10 @@ This project uses Python 3.6.4 and R 3.5.0
 
 To get started, download, unzip, and run:
 
-* `pip install  requirements.txt`
+* `pip3 install -r requirements.txt`
 * `R -f install_packages.R`
-* `jupyter-notebook run_algs.ipynb`
-* `jupyter-notebook run_algs_real_data.ipynb`
+
+To recreate the figures, run
+* `bash create_fig1_data.sh`
+* `python3 create_fig1c_data.py`
+

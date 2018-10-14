@@ -65,7 +65,7 @@ os.makedirs(dataset_folder, exist_ok=True)
 yaml.dump(vars(args), open(os.path.join(dataset_folder, 'config.yaml'), 'w'))
 print('CREATING DAGs')
 for d in trange(args.npairs):
-    B1 = math_utils.random_dag(args.nnodes, args.nneighbors/(args.nnodes-1))
+    B1 = math_utils.random_dag(args.nnodes, args.nneighbors/(args.nnodes))
     B2, _ = math_utils.random_dag_changes(
         B1,
         r=args.percent_removed,

@@ -19,7 +19,7 @@ args = parser.parse_args()
 dataset_folder = os.path.join(DATA_FOLDER, args.folder)
 dataset_config = yaml.load(open(os.path.join(dataset_folder, 'config.yaml')))
 
-print('SAMPLING from DAGs')
+print('SAMPLING FROM DAGs')
 for d in trange(dataset_config['npairs']):
     pair_folder = os.path.join(dataset_folder, 'pair%d' % d)
     parameters_folder = os.path.join(pair_folder, 'parameters')
