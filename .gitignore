@@ -5,3 +5,5 @@ __pycache__
 
 data
 venv
+host_notebook.sh
+use_notebook.sh

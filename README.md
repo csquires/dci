@@ -9,10 +9,15 @@ This project uses Python 3.6.4 and R 3.5.0
 
 To get started, download, unzip, and run:
 
-* `pip3 install -r requirements.txt`
+* `bash make_venv.sh`
 * `R -f install_packages.R`
 
 To recreate the figures, run
-* `bash create_fig1_data.sh`
+* `bash create_fig1ab_data.sh`
 * `python3 create_fig1c_data.py`
+* `bash create_fig2_data.sh`
+* `ipython3 kernel install --user --name=dci`
+* `jupyter-notebook`
+
+Then run the notebooks *figure1ab.ipynb*, *figure1c.ipynb*, and *figure2.ipynb*
 
