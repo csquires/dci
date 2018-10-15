@@ -13,6 +13,7 @@ To get started, download, unzip, and run:
 * `R -f install_packages.R`
 
 To recreate the figures, run
+* `source venv/bin/activate`
 * `bash create_fig1ab_data.sh`
 * `python3 create_fig1c_data.py`
 * `bash create_fig2_data.sh`
