@@ -11,6 +11,9 @@ from utils.sys_utils import listify_dict
 import itertools as itr
 from tqdm import tqdm
 
+random.seed(1729)
+np.random.seed(1729)
+
 
 def estimate_ddag_skeleton_(tup): return estimate_ddag_skeleton(*tup)
 
@@ -21,16 +24,43 @@ def estimate_ddag_(tup): return estimate_ddag(*tup)
 def estimate_dug_(tup): return estimate_dug(*tup)
 
 
-random.seed(1729)
-np.random.seed(1729)
+def kliep_array_to_edges(kliep_array, p, thresh=0.):
+    edges = set()
+    k = 0
+    for j in range(1, p):
+        for i in range(j):
+            if kliep_array[k] > thresh:
+                edges.add((i, j))
+            k += 1
+    return edges
+
 
 parser = argparse.ArgumentParser(description='Run DCI on a data set')
 parser.add_argument('--folder', type=str, help='Folder name of data set')
 parser.add_argument('--nsamples', type=int, help='Number of samples to use in analyzing results')
 parser.add_argument('--alphas2', type=float, nargs='+', help='Significance thresholds used in estimating D-DAGs')
 parser.add_argument('--dug', type=str, default='constraint', help='Method for estimating the D-UG')
-parser.add_argument('--alpha1', type=float, nargs='?', default=.001, help='Significance threshold used in estimating D-UGs if the method is "constraint"')
-
+parser.add_argument(
+    '--alpha1',
+    type=float,
+    nargs='?',
+    default=.001,
+    help='Significance threshold if D-UG estimation method is "constraint"'
+)
+parser.add_argument(
+    '--lambda-kliep',
+    type=float,
+    nargs='?',
+    default=4,
+    help='Sparsity parameter if the D-UG estimation method is "kliep"'
+)
+parser.add_argument(
+    '--threshold-kliep',
+    type=float,
+    nargs='?',
+    default=.05,
+    help='Threshold on edge weights if the D-UG estimation method is "kliep"'
+)
 args = parser.parse_args()
 
 dataset_folder = os.path.join(DATA_FOLDER, args.folder)
@@ -45,8 +75,8 @@ if args.dug == 'constraint':
     alg_suffix = 'dci-c'
 elif args.dug == 'fc':
     alg_suffix = 'dci-fc'
-elif args.duf == 'kliep':
-    alg_suffix = 'kliep'
+elif args.dug == 'kliep':
+    alg_suffix = 'dci-k'
 else:
     raise ValueError('dug must be "constraint", "kliep", or "fc"')
 results_folders = [os.path.join(sample_folder, 'results', alg_suffix) for sample_folder in samples_folders]
@@ -65,6 +95,14 @@ with Pool(cpu_count()-1) as p:
         tups = zip(K1s, K2s, [args.nsamples]*npairs, [args.nsamples]*npairs, [args.alpha1]*npairs)
         dug_results = list(tqdm(p.imap(estimate_dug_, tups), total=npairs))
         est_dugs, est_changed_nodes = zip(*dug_results)
+    elif args.dug == 'kliep':
+        dug_filenames = [
+            os.path.join(folder, 'results', 'kliep', 'lambda=%.3f' % args.lambda_kliep, 'K.txt')
+            for folder in samples_folders
+        ]
+        kliep_arrays = [np.loadtxt(fn) for fn in dug_filenames]
+        est_dugs = [kliep_array_to_edges(kliep_array, nnodes, thresh=args.threshold_kliep) for kliep_array in kliep_arrays]
+        est_changed_nodes = [{i for i, j in edges} | {j for i, j in edges} for edges in est_dugs]
     else:
         est_dugs = [set(itr.combinations(range(nnodes), 2))]*npairs
         est_changed_nodes = [set(range(nnodes))]*npairs

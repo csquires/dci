@@ -5,8 +5,9 @@ function nothing = run_kliep(folder, n_samples, p, lambdas, npairs)
         disp(['pair', num2str(n_pair)]);
         disp('========');
         m = 10;
-        xp = dlmread([folder, 'pair', num2str(n_pair), '/parameters/B1.txt'], '\t')';
-        xq = dlmread([folder, 'pair', num2str(n_pair), '/parameters/B2.txt'], '\t')';
+        xp = dlmread([folder, 'pair', num2str(n_pair), '/samples_n=', num2str(n_samples), '/X1.txt'], ' ')';
+        display(xp);
+        xq = dlmread([folder, 'pair', num2str(n_pair), '/samples_n=', num2str(n_samples), '/X2.txt'], ' ')';
         kp = kernel_linear(xp); kq = kernel_linear(xq);
         np = size(xp, 2);
 
@@ -48,7 +49,7 @@ function nothing = run_kliep(folder, n_samples, p, lambdas, npairs)
             end
             foldername = [folder, 'pair', num2str(n_pair), '/samples_n=', num2str(n_samples), '/results/kliep/lambda=', sprintf('%.3f', lambda_), '/'];
             mkdir(foldername);
-            dlmwrite([foldername, 'K', num2str(n_pair), '.txt'], theta, '\t');
+            dlmwrite([foldername, 'K.txt'], theta, '\t');
         end
     end
 end
